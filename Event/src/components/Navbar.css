@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+
+.navbar-logo{
+  font-family: 'Orbitron', sans-serif;
+  font-size: 32px;
+  margin-left: 0px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  text-transform: uppercase;
+
+}
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgb(255, 255, 255);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgb(249, 247, 247);
+  font-family: 'Outfit', sans-serif;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgb(15, 15, 15);
+  text-decoration: none;
+}
+.body{
+  background-color: aliceblue;
+}
+.navbar-logo span {
+  color: #000000;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links a {
+  padding: 8px 16px;
+  color: rgba(16, 16, 16, 0.6);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.navbar-links a:hover {
+  color: rgb(7, 7, 7);
+  background: rgba(34, 33, 33, 0.07);
+}
+
+.navbar-links a.active {
+  color: #504d49;
+}
+
+.navbar-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-ghost {
+  padding: 9px 20px;
+  background: transparent;
+  border: 1px solid rgba(11, 11, 11, 0.25);
+  border-radius: 8px;
+  color: rgb(16, 16, 16);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.btn-primary {
+  padding: 9px 22px;
+  background: #06d02e;
+  border: none;
+  border-radius: 8px;
+  color: rgb(10, 10, 10);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary:hover {
+  background: #039316;
+  transform: translateY(-1px);
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: rgb(18, 18, 18);
+  font-size: 24px;
+  cursor: pointer;
+}
+.body{
+  background-color: white;
+}
+
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 65px;
+    left: 0;
+    right: 0;
+    background: rgba(243, 243, 246, 0.98);
+    padding: 16px 28px;
+  }
+
+  .navbar-links.open {
+    display: flex;
+  }
+
+  .navbar-buttons {
+    display: none;
+  }
+
+  .hamburger {
+    display: block;
+  }
+}
