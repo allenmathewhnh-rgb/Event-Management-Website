@@ -1,5 +1,4 @@
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+
 import img1 from '../assets/img1.jpg'
 import img2 from '../assets/img2.jpg'
 import img3 from '../assets/img3.jpg'
@@ -10,15 +9,15 @@ function Carousel() {
       <div className="carousel-inner">
 
         <div className="carousel-item active" data-bs-interval="3000">
-          <img src={img1} className="d-block w-100" alt="slide1" style={{ height: '90vh', objectFit: 'cover' }} />
+          <img src={img1} className="d-block w-100" alt="slide1" style={{ height: '50vh', objectFit: 'cover' }} />
         </div>
 
         <div className="carousel-item" data-bs-interval="3000">
-          <img src={img2} className="d-block w-100" alt="slide2" style={{ height: '90vh', objectFit: 'cover' }} />
+          <img src={img2} className="d-block w-100" alt="slide2" style={{ height: '50vh', objectFit: 'cover' }} />
         </div>
 
         <div className="carousel-item" data-bs-interval="3000">
-          <img src={img3} className="d-block w-100" alt="slide3" style={{ height: '90vh', objectFit: 'cover' }} />
+          <img src={img3} className="d-block w-100" alt="slide3" style={{ height: '50vh', objectFit: 'cover' }} />
         </div>
 
       </div>
@@ -35,5 +34,8 @@ function Carousel() {
     </div>
   )
 }
+
+
+
 
 export default Carousel

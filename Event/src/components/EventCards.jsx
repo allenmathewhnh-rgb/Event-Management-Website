@@ -1,5 +1,6 @@
 import './EventCards.css'
 import img1 from '../assets/img1.jpg'
+import img2 from '../assets/img2.jpg'
 
 function EventCards() {
   const events = [
@@ -11,6 +12,14 @@ function EventCards() {
   ]
 
   const artists = [
+    { id: 1, name: 'Arijit Singh', genre: 'Bollywood Live', price: '₹1500 onwards', date: 'April 20, 2026', img: img1 },
+    { id: 2, name: 'Nucleya', genre: 'Electronic / Bass', price: '₹799 onwards', date: 'May 5, 2026', img: img2 },
+    { id: 3, name: 'Prateek Kuhad', genre: 'Indie Folk', price: '₹999 onwards', date: 'May 18, 2026', img: img1 },
+    { id: 4, name: 'When Chai Met Toast', genre: 'Indie Pop', price: '₹599 onwards', date: 'June 1, 2026', img: img1 },
+    { id: 5, name: 'Ritviz', genre: 'Electronic / Pop', price: '₹699 onwards', date: 'June 15, 2026', img: img1 },
+  ]
+
+  const artist = [
     { id: 1, name: 'Arijit Singh', genre: 'Bollywood Live', price: '₹1500 onwards', date: 'April 20, 2026', img: img1 },
     { id: 2, name: 'Nucleya', genre: 'Electronic / Bass', price: '₹799 onwards', date: 'May 5, 2026', img: img1 },
     { id: 3, name: 'Prateek Kuhad', genre: 'Indie Folk', price: '₹999 onwards', date: 'May 18, 2026', img: img1 },
@@ -65,6 +74,21 @@ function EventCards() {
             )
           })}
         </div>
+      </div>
+      <div className="section" style={{ position: 'relative' }}>
+        <h2 className="section-title">Artists in your District</h2>
+        <div className="cards-scroll">
+          {artists.map(function(artist) {
+            return (
+              <div key={artist.id} className="artist-card">
+                <img src={artist.img} alt={artist.name} className="artist-img" />
+                <p className="artist-name">{artist.name}</p>
+              </div>
+            )
+          })}
+          
+        </div>
+        <button className="arrow-btn">›</button>
       </div>
 
     </div>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './Navbar.css'
 
-function Navbar() {
+function Navbar({onLoginClick,onRegisterClick}) {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
 
@@ -12,14 +12,16 @@ function Navbar() {
     { name: 'Events', path: '/events' },
     { name: 'Movies', path: '/movies' },
     { name: 'Activities', path: '/activities' },
-    { name: 'Play', path: '/play' },
+    { name: 'My Bookings', path: '/my-bookings' },
+    { name: 'Admin', path: '/admin' },
+    { name: 'User', path: '/user' },
   ]
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          <span className="navbar-logo-text">Event<span className="navbar-logo-accent">Flow</span></span>
+          <span className="navbar-logo-text">Eventure<span className="navbar-logo-accent"></span></span>
         </Link>
 
         <ul className={menuOpen ? 'navbar-links open' : 'navbar-links'}>
@@ -39,8 +41,8 @@ function Navbar() {
         </ul>
 
         <div className="navbar-buttons">
-          <button className="btn-ghost">Log in</button>
-          <button className="btn-primary">Get Started</button>
+          <button className="btn-ghost" onClick={onLoginClick}>Log in</button>
+          <button className="btn-primary" onClick={onRegisterClick}>Register</button>
         </div>
 
         <button className="hamburger" onClick={function() { setMenuOpen(!menuOpen) }}>
