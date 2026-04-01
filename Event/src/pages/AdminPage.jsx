@@ -1,9 +1,10 @@
 import './DashboardPage.css'
+import Dashboard from './Dashboard'
 
 const adminStats = [
   { title: 'Active Events', value: '24', note: '6 new event drafts this week' },
   { title: 'Total Users', value: '1,284', note: '12% growth from last month' },
-  { title: 'Revenue', value: '$18.4K', note: 'Bookings are trending upward' },
+  { title: 'Revenue', value: 'INR 18.4K', note: 'Bookings are trending upward' },
 ]
 
 const adminTasks = [
@@ -70,6 +71,8 @@ export default function AdminPage() {
             </article>
           ))}
         </div>
+
+        <Dashboard />
 
         <div className="dashboard-sections">
           <article className="dashboard-card panel-card">

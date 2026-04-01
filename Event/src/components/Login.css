@@ -1,9 +1,11 @@
 .login-card {
-  width: 500px;
+  width: 100%;
+  max-width: 420px;
   background: white;
-  border-radius: 12px;
-  padding: 50px;
+  border-radius: 18px;
+  padding: 40px;
   font-family: Arial, Helvetica, sans-serif;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
 }
 
 .login-card h2 {

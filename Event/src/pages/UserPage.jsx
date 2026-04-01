@@ -1,92 +1,224 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { getBookings, getUsers } from '../utils/storage'
 import './DashboardPage.css'
 
-const userStats = [
-  { title: 'Upcoming Events', value: '06', note: 'Your next booking starts this Friday' },
-  { title: 'Saved Activities', value: '13', note: 'Add more plans for this month' },
-  { title: 'Reward Points', value: '940', note: 'Use them on premium seats or offers' },
-]
+const userTags = ['My Tickets', 'Wishlist', 'Recommendations', 'Offers', 'Settings']
 
-const userPlans = [
-  {
-    title: 'Complete your weekend plan',
-    description: 'Pick one movie, one live event, and one activity from your saved list.',
-  },
-  {
-    title: 'Invite your friends',
-    description: 'Share your bookings and build a group plan with one tap.',
-  },
-  {
-    title: 'Check personalized picks',
-    description: 'Your recommendations were refreshed based on your last bookings.',
-  },
-]
+export default function UserPage({ currentUsername }) {
+  const [currentUser, setCurrentUser] = useState(null)
+  const [bookings, setBookings] = useState([])
 
-const userTags = ['My Tickets', 'Wishlist', 'Recommendations', 'Profile', 'Offers']
+  useEffect(() => {
+    const storedUsername = currentUsername || localStorage.getItem('username') || ''
+    if (!storedUsername) {
+      setCurrentUser(null)
+      setBookings([])
+      return
+    }
 
-export default function UserPage() {
+    const users = getUsers()
+    const matchedUser = users.find(
+      (user) => user.username === storedUsername || user.email === storedUsername,
+    )
+
+    const user = matchedUser || {
+      username: storedUsername || 'guest',
+      name: storedUsername || 'Guest User',
+      email: '',
+      phone: '',
+      role: 'Customer',
+      id: Date.now(),
+    }
+
+    const allBookings = getBookings()
+    const userName = (user.name || user.username || '').toLowerCase()
+    const userEmail = (user.email || '').toLowerCase()
+    const loginUsername = storedUsername.toLowerCase()
+
+    const filteredBookings = allBookings.filter((booking) => {
+      const bookingUsername = (booking.username || '').toLowerCase()
+      const bookingName = (booking.userName || booking.buyerName || '').toLowerCase()
+      const bookingEmail = (booking.buyerEmail || '').toLowerCase()
+
+      if (bookingUsername) {
+        return bookingUsername === loginUsername
+      }
+
+      return bookingName === userName || bookingEmail === userEmail
+    })
+
+    setCurrentUser(user)
+    setBookings(filteredBookings)
+  }, [currentUsername])
+
+  const sortedBookings = useMemo(
+    () =>
+      [...bookings].sort(
+        (a, b) =>
+          new Date(b.bookedAt || b.bookingDate || Date.now()) -
+          new Date(a.bookedAt || a.bookingDate || Date.now()),
+      ),
+    [bookings],
+  )
+
+  const upcomingCount = bookings.filter((booking) => booking.status !== 'Cancelled').length
+  const upcomingTickets = bookings.reduce(
+    (sum, booking) =>
+      sum + (booking.status !== 'Cancelled' ? Number(booking.tickets || 1) : 0),
+    0,
+  )
+  const cancelledCount = bookings.filter((booking) => booking.status === 'Cancelled').length
+  const totalTickets = bookings.reduce(
+    (sum, booking) => sum + Number(booking.tickets || 1),
+    0,
+  )
+  const totalSpent = bookings.reduce(
+    (sum, booking) => sum + Number(booking.total || booking.totalAmount || 0),
+    0,
+  )
+  const memberSince =
+    currentUser?.memberSince ||
+    (currentUser?.id ? new Date(currentUser.id).toLocaleDateString() : '—')
+
   return (
-    <section className="dashboard-page user-page">
+    <section className="dashboard-page user-page profile-page">
       <div className="dashboard-shell">
         <div className="dashboard-hero">
-          <article className="dashboard-card dashboard-intro">
-            <span className="dashboard-badge">User Dashboard</span>
-            <h1>See your bookings, rewards, and picks in a page that matches the admin view.</h1>
-            <p>
-              The structure stays almost the same so both pages feel connected, while the colors
-              and content shift slightly to fit the user experience.
-            </p>
+          <article className="dashboard-card profile-card">
+            <div className="profile-header">
+              <div className="profile-avatar">
+                {(currentUser?.name?.charAt(0) || 'U').toUpperCase()}
+              </div>
+              <div className="profile-primary">
+                <span className="dashboard-badge">User profile</span>
+                <h1>{currentUser?.name || 'Guest User'}</h1>
+                <p>{currentUser?.role || 'Customer'}</p>
+              </div>
+            </div>
 
-            <div className="dashboard-actions">
-              <button className="dashboard-primary-action">Explore Events</button>
-              <button className="dashboard-secondary-action">My Tickets</button>
+            <div className="profile-details">
+              <div className="profile-field">
+                <span>Email</span>
+                <strong>{currentUser?.email || 'No email added'}</strong>
+              </div>
+              <div className="profile-field">
+                <span>Phone</span>
+                <strong>{currentUser?.phone || 'Not provided'}</strong>
+              </div>
+              <div className="profile-field">
+                <span>Member since</span>
+                <strong>{memberSince}</strong>
+              </div>
+              <div className="profile-field">
+                <span>Total spent</span>
+                <strong>₹{totalSpent}</strong>
+              </div>
+            </div>
+
+            <div className="profile-actions">
+              <Link className="dashboard-primary-action" to="/my-bookings">
+                My Bookings
+              </Link>
+              <Link className="dashboard-secondary-action" to="/events">
+                Explore events
+              </Link>
             </div>
           </article>
 
           <aside className="dashboard-card dashboard-highlight">
             <div>
-              <span className="dashboard-badge">Personal Feed</span>
-              <h2>Your week is filling up nicely.</h2>
-              <p>Two new recommendations match your favorite movies and live shows.</p>
+              <span className="dashboard-badge">Welcome back</span>
+              <h2>Track your bookings and upcoming events.</h2>
+              <p>Your personal dashboard keeps all your tickets, status, and event details in one place.</p>
             </div>
 
             <div className="dashboard-progress">
               <span>
-                <strong>Profile completion</strong>
-                <strong>84%</strong>
+                <strong>Active tickets</strong>
+                <strong>{upcomingTickets}</strong>
               </span>
               <div className="dashboard-progress-track">
-                <div className="dashboard-progress-bar" style={{ width: '84%' }} />
+                <div
+                  className="dashboard-progress-bar"
+                  style={{ width: `${Math.min(100, upcomingTickets * 10)}%` }}
+                />
               </div>
             </div>
           </aside>
         </div>
 
         <div className="dashboard-stats">
-          {userStats.map((stat) => (
-            <article key={stat.title} className="dashboard-card stat-card">
-              <h3>{stat.title}</h3>
-              <strong>{stat.value}</strong>
-              <p>{stat.note}</p>
-            </article>
-          ))}
+          <article className="dashboard-card stat-card">
+            <h3>Upcoming events</h3>
+            <strong>{upcomingCount}</strong>
+            <p>Events that are still confirmed and ready to attend.</p>
+          </article>
+          <article className="dashboard-card stat-card">
+            <h3>Booked tickets</h3>
+            <strong>{totalTickets}</strong>
+            <p>Number of tickets you have reserved across bookings.</p>
+          </article>
+          <article className="dashboard-card stat-card">
+            <h3>Total spent</h3>
+            <strong>₹{totalSpent}</strong>
+            <p>Amount spent on confirmed bookings.</p>
+          </article>
         </div>
 
-        <div className="dashboard-sections">
+        <div className="dashboard-sections profile-sections">
           <article className="dashboard-card panel-card">
-            <h2>Your next steps</h2>
-            <div className="dashboard-list">
-              {userPlans.map((plan) => (
-                <div key={plan.title} className="dashboard-list-item">
-                  <strong>{plan.title}</strong>
-                  <p>{plan.description}</p>
-                </div>
-              ))}
+            <div className="section-headline">
+              <h2>Recent Bookings</h2>
+              <p>See your latest ticket activity and booking details.</p>
             </div>
+            {sortedBookings.length === 0 ? (
+              <div className="empty-state-card">
+                <h3>No bookings yet</h3>
+                <p>Once you complete a booking, it will appear here.</p>
+              </div>
+            ) : (
+              <div className="profile-bookings-grid">
+                {sortedBookings.map((booking) => (
+                  <article key={booking.id} className="profile-booking-card">
+                    <div className="booking-card-top">
+                      <div>
+                        <h3>{booking.eventName || 'Untitled event'}</h3>
+                        <p>{formatDate(booking.date)} · {booking.time || 'TBA'}</p>
+                      </div>
+                      <span className={`booking-badge ${booking.status === 'Cancelled' ? 'badge-cancelled' : 'badge-confirmed'}`}>
+                        {booking.status || 'Confirmed'}
+                      </span>
+                    </div>
+                    <div className="booking-row">
+                      <span>Booking ID</span>
+                      <strong>{booking.ticketId || 'N/A'}</strong>
+                    </div>
+                    <div className="booking-row">
+                      <span>Email</span>
+                      <strong>{booking.buyerEmail || 'Unknown'}</strong>
+                    </div>
+                    <div className="booking-row">
+                      <span>Tickets</span>
+                      <strong>{booking.tickets || 1}</strong>
+                    </div>
+                    <div className="booking-row">
+                      <span>Amount</span>
+                      <strong>₹{booking.total || booking.totalAmount || 0}</strong>
+                    </div>
+                    <div className="booking-row">
+                      <span>Booked on</span>
+                      <strong>{formatDate(booking.bookedAt || booking.bookingDate)}</strong>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </article>
 
           <article className="dashboard-card panel-card">
             <h2>Quick access</h2>
-            <p>These shortcuts mirror the admin page so both views feel visually consistent.</p>
+            <p>Navigate your profile, saved plans, and booking shortcuts.</p>
             <div className="dashboard-tags">
               {userTags.map((tag) => (
                 <span key={tag} className="dashboard-tag">
@@ -99,4 +231,12 @@ export default function UserPage() {
       </div>
     </section>
   )
+
+  function formatDate(value) {
+    if (!value) return 'TBA'
+    const date = new Date(value)
+    return Number.isNaN(date.getTime())
+      ? value
+      : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  }
 }

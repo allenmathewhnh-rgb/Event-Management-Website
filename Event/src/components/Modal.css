@@ -1,11 +1,12 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1100;
 }
 
 .modal-content {
@@ -14,6 +15,8 @@
   border-radius: 12px;
   max-height: 90vh;
   overflow-y: auto;
+  width: 100%;
+  max-width: 980px;
 }
 
 .modal-close {

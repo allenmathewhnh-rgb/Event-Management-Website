@@ -23,11 +23,35 @@
 }
 
 .dashboard-card {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(78, 115, 223, 0.12);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(78, 115, 223, 0.14);
   border-radius: 24px;
-  box-shadow: 0 20px 45px rgba(41, 53, 108, 0.12);
+  box-shadow: 0 20px 45px rgba(41, 53, 108, 0.14);
   backdrop-filter: blur(10px);
+}
+
+.dashboard-card h2,
+.dashboard-card h3 {
+  color: #1a2240;
+}
+
+.stat-card {
+  padding: 24px;
+}
+
+.stat-card p {
+  margin: 0;
+  color: #66708b;
+  font-size: 0.95rem;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 2.2rem;
+  color: #0f172a;
+  font-weight: 900;
+  letter-spacing: -0.03em;
 }
 
 .dashboard-intro {
@@ -218,6 +242,152 @@
   font-weight: 600;
 }
 
+.profile-page .profile-card {
+  padding: 32px;
+  display: grid;
+  gap: 24px;
+}
+
+.profile-page .profile-header {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.profile-page .profile-avatar {
+  min-width: 76px;
+  min-height: 76px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #14a36f, #4e73df);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.profile-page .profile-primary h1 {
+  margin: 12px 0 8px;
+  font-size: 2rem;
+  color: #0f172a;
+}
+
+.profile-page .profile-primary p {
+  margin: 0;
+  color: #526181;
+}
+
+.profile-page .profile-details {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-page .profile-field {
+  display: grid;
+  gap: 6px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: #f7f8ff;
+  border: 1px solid rgba(78, 115, 223, 0.12);
+}
+
+.profile-page .profile-field span {
+  color: #66708b;
+  font-size: 0.95rem;
+}
+
+.profile-page .profile-field strong {
+  color: #1a2240;
+  font-size: 1rem;
+}
+
+.profile-page .profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.profile-page .profile-sections {
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+}
+
+.profile-page .section-headline h2 {
+  margin: 0 0 10px;
+}
+
+.profile-page .section-headline p {
+  margin: 0 0 20px;
+  color: #66708b;
+}
+
+.profile-page .profile-bookings-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-page .profile-booking-card {
+  padding: 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(78, 115, 223, 0.12);
+  background: #ffffff;
+  display: grid;
+  gap: 16px;
+}
+
+.profile-page .booking-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.profile-page .booking-card-top h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.profile-page .booking-card-top p {
+  margin: 8px 0 0;
+  color: #66708b;
+}
+
+.profile-page .booking-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  color: #526181;
+}
+
+.profile-page .booking-row strong {
+  color: #1a2240;
+}
+
+.profile-page .booking-badge {
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.profile-page .badge-confirmed {
+  background: rgba(20, 163, 111, 0.12);
+  color: #0f8a65;
+}
+
+.profile-page .badge-cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.profile-page .empty-state-card {
+  padding: 28px;
+  border-radius: 20px;
+  background: #f7f8ff;
+  border: 1px solid rgba(78, 115, 223, 0.12);
+}
+
 .admin-page .dashboard-badge,
 .admin-page .dashboard-tag {
   background: rgba(78, 115, 223, 0.12);
@@ -266,5 +436,184 @@
   .dashboard-primary-action,
   .dashboard-secondary-action {
     width: 100%;
+  }
+}
+
+.dashboard-booking-panel {
+  display: grid;
+  gap: 22px;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 28px;
+}
+
+.profile-summary {
+  text-align: right;
+}
+
+.profile-summary strong {
+  display: block;
+  font-size: 1rem;
+  color: #1a2240;
+}
+
+.profile-summary p {
+  margin: 6px 0 0;
+  color: #66708b;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-pill {
+  padding: 20px;
+  border-radius: 22px;
+  background: #f8f9ff;
+  border: 1px solid rgba(78, 115, 223, 0.14);
+}
+
+.stat-pill p {
+  margin: 0;
+  color: #66708b;
+  font-size: 0.95rem;
+}
+
+.stat-pill strong {
+  display: block;
+  margin-top: 14px;
+  font-size: 1.75rem;
+  color: #1a2240;
+}
+
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tab-button {
+  border: 1px solid rgba(78, 115, 223, 0.18);
+  background: #fff;
+  color: #2a3b86;
+  padding: 12px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button.active {
+  background: #4e73df;
+  color: #fff;
+  border-color: #4e73df;
+}
+
+.booking-cards {
+  display: grid;
+  gap: 18px;
+}
+
+.booking-card {
+  padding: 22px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid rgba(78, 115, 223, 0.12);
+  box-shadow: 0 18px 32px rgba(33, 51, 98, 0.06);
+}
+
+.booking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.booking-card h3 {
+  margin: 0 0 6px;
+  color: #1a2240;
+}
+
+.booking-card p {
+  margin: 10px 0 0;
+  color: #66708b;
+}
+
+.booking-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.booking-status.upcoming {
+  color: #1155db;
+  background: rgba(17, 85, 219, 0.12);
+}
+
+.booking-status.completed {
+  color: #107a49;
+  background: rgba(16, 122, 73, 0.12);
+}
+
+.booking-status.cancelled,
+.booking-status.canceled {
+  color: #bf2b38;
+  background: rgba(191, 43, 56, 0.14);
+}
+
+.booking-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  color: #66708b;
+  font-size: 0.95rem;
+}
+
+.dashboard-info,
+.dashboard-error {
+  margin: 0;
+  padding: 18px 20px;
+  border-radius: 18px;
+}
+
+.dashboard-info {
+  background: #f5f7ff;
+  color: #47517b;
+}
+
+.dashboard-error {
+  background: #fff1f1;
+  color: #c0392b;
+}
+
+@media (max-width: 900px) {
+  .stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
   }
 }

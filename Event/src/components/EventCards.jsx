@@ -4,11 +4,11 @@ import img2 from '../assets/img2.jpg'
 
 function EventCards() {
   const events = [
-    { id: 1, title: 'Smaaash | Airia Mall', location: 'SMAAASH, Gurugram', price: '₹209 onwards', time: 'Daily, 12:30 PM onwards', offer: 'Flat 30% off on select tickets', img: img1 },
-    { id: 2, title: 'F9 Go Karting | Sector 59', location: 'F9 Go Karting, Gurugram', price: '₹675 onwards', time: 'Daily, Multiple slots', offer: 'Buy 2, Get 1 Free', img: img1 },
-    { id: 3, title: 'The Game Palacio | Delhi', location: 'The Game Palacio, Delhi/NCR', price: '₹354 onwards', time: 'Daily, Multiple slots', offer: 'Flat 40% off on select tickets', img: img1 },
-    { id: 4, title: 'Comedy Night | Mumbai', location: 'Laugh Club, Mumbai', price: '₹499 onwards', time: 'Saturday, 8:00 PM', offer: 'Early Bird Offer', img: img1 },
-    { id: 5, title: 'Music Festival 2026', location: 'DLF, New Delhi', price: '₹999 onwards', time: 'April 12, 2026', offer: 'Limited Seats', img: img1 },
+    { id: 1, title: 'City Lights Concert', location: 'Harbor View Arena', price: '₹1,250 onwards', time: 'Fri, 7:30 PM', offer: 'Early Bird: 20% off', img: img1 },
+    { id: 2, title: 'Midnight Jazz Night', location: 'Blue Note Club', price: '₹899 onwards', time: 'Sat, 9:00 PM', offer: '2-for-1 on standard seats', img: img2 },
+    { id: 3, title: 'Foodie Fiesta', location: 'Garden Square', price: '₹499 onwards', time: 'Sun, 12:00 PM', offer: 'Free dessert with VIP pass', img: img1 },
+    { id: 4, title: 'Comedy Gala', location: 'Laughter Lounge', price: '₹699 onwards', time: 'Sat, 8:00 PM', offer: 'Student discount available', img: img2 },
+    { id: 5, title: 'Fashion & Music Expo', location: 'Metro Convention Centre', price: '₹1,799 onwards', time: 'Apr 12, 2026', offer: 'Limited early access', img: img1 },
   ]
 
   const artists = [

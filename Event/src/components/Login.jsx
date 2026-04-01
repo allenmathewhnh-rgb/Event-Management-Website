@@ -1,20 +1,25 @@
 import React, { useState } from "react";
+import { getUsers } from '../utils/storage'
 import "./Login.css";
 
-const Login = ({ onSwitchToRegister, onClose }) => {
+const Login = ({ onSwitchToRegister, onClose, onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (
-      storedUser &&
-      username === storedUser.username &&
-      password === storedUser.password
-    ) {
+    const users = getUsers()
+    const storedUser = users.find(
+      (user) => user.username === username || user.email === username,
+    )
+
+    if (storedUser && password === storedUser.password) {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('username', storedUser.username);
       alert("Login successful");
-      onClose();
+      if (typeof onLoginSuccess === 'function') {
+        onLoginSuccess(storedUser.username);
+      }
     } else {
       alert("Invalid credentials");
     }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './Navbar.css'
 
-function Navbar({onLoginClick,onRegisterClick}) {
+function Navbar({onLoginClick,onRegisterClick,onLogout,isAuthenticated}) {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
 
@@ -31,7 +31,13 @@ function Navbar({onLoginClick,onRegisterClick}) {
                 <Link
                   to={link.path}
                   className={location.pathname === link.path ? 'active' : ''}
-                  onClick={function() { setMenuOpen(false) }}
+                  onClick={function(event) {
+                    setMenuOpen(false)
+                    if (link.path === '/my-bookings' && !isAuthenticated) {
+                      event.preventDefault()
+                      onLoginClick('/my-bookings')
+                    }
+                  }}
                 >
                   {link.name}
                 </Link>
@@ -41,8 +47,14 @@ function Navbar({onLoginClick,onRegisterClick}) {
         </ul>
 
         <div className="navbar-buttons">
-          <button className="btn-ghost" onClick={onLoginClick}>Log in</button>
-          <button className="btn-primary" onClick={onRegisterClick}>Register</button>
+          {isAuthenticated ? (
+            <button className="btn-ghost" onClick={onLogout}>Logout</button>
+          ) : (
+            <>
+              <button className="btn-ghost" onClick={onLoginClick}>Log in</button>
+              <button className="btn-primary" onClick={onRegisterClick}>Register</button>
+            </>
+          )}
         </div>
 
         <button className="hamburger" onClick={function() { setMenuOpen(!menuOpen) }}>
