@@ -1,14 +1,30 @@
+import { useEffect, useState } from 'react'
 import Modal from './Modal'
 import BookingForm from './BookingForm'
+import { FALLBACK_EVENT_IMAGE, resolveEventImageSrc } from '../utils/storage'
 
 export default function EventModal({ event, isOpen, onClose, onBooked, isAuthenticated, onRequireLogin }) {
+  const [imgSrc, setImgSrc] = useState(FALLBACK_EVENT_IMAGE)
+
+  useEffect(() => {
+    if (!event) return
+    setImgSrc(resolveEventImageSrc(event))
+  }, [event?.id, event?.image, event?.imageUrl])
+
   if (!event) return null
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div style={styles.container}>
         <div style={styles.left}>
-          <img src={event.image} alt={event.name} style={styles.image} />
+          <img
+            src={imgSrc}
+            alt={event.name}
+            style={styles.image}
+            loading="lazy"
+            decoding="async"
+            onError={() => setImgSrc(FALLBACK_EVENT_IMAGE)}
+          />
           <div style={styles.details}>
             <h2 style={styles.title}>{event.name}</h2>
             <p style={styles.description}>{event.description}</p>
@@ -75,6 +91,7 @@ const styles = {
     height: 360,
     objectFit: 'cover',
     borderRadius: 20,
+    background: '#e8ecf4',
   },
   details: {
     display: 'grid',

@@ -1,7 +1,18 @@
-
-import img1 from '../assets/img1.jpg'
-import img2 from '../assets/img2.jpg'
-import img3 from '../assets/img3.jpg'
+/** Hero slides for the home page — venues, conferences, and live experiences (event-management tone). */
+const SLIDES = [
+  {
+    src: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1920&q=85',
+    alt: 'Audience at a large indoor event and conference',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=1920&q=85',
+    alt: 'Professional conference and seminar seating',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1470229722913-7c0a75b90108?auto=format&fit=crop&w=1920&q=85',
+    alt: 'Live stage lighting at a concert or showcase event',
+  },
+]
 
 function Carousel() {
   return (
@@ -9,15 +20,15 @@ function Carousel() {
       <div className="carousel-inner">
 
         <div className="carousel-item active" data-bs-interval="3000">
-          <img src={img1} className="d-block w-100" alt="slide1" style={{ height: '50vh', objectFit: 'cover' }} />
+          <img src={SLIDES[0].src} className="d-block w-100" alt={SLIDES[0].alt} style={{ height: '50vh', objectFit: 'cover' }} />
         </div>
 
         <div className="carousel-item" data-bs-interval="3000">
-          <img src={img2} className="d-block w-100" alt="slide2" style={{ height: '50vh', objectFit: 'cover' }} />
+          <img src={SLIDES[1].src} className="d-block w-100" alt={SLIDES[1].alt} style={{ height: '50vh', objectFit: 'cover' }} />
         </div>
 
         <div className="carousel-item" data-bs-interval="3000">
-          <img src={img3} className="d-block w-100" alt="slide3" style={{ height: '50vh', objectFit: 'cover' }} />
+          <img src={SLIDES[2].src} className="d-block w-100" alt={SLIDES[2].alt} style={{ height: '50vh', objectFit: 'cover' }} />
         </div>
 
       </div>
@@ -34,8 +45,5 @@ function Carousel() {
     </div>
   )
 }
-
-
-
 
 export default Carousel

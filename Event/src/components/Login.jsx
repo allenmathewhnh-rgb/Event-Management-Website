@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getUsers } from '../utils/storage'
+import { getUsers, LOGGED_IN_USER_KEY } from '../utils/storage'
 import "./Login.css";
 
 const Login = ({ onSwitchToRegister, onClose, onLoginSuccess }) => {
@@ -16,9 +16,14 @@ const Login = ({ onSwitchToRegister, onClose, onLoginSuccess }) => {
     if (storedUser && password === storedUser.password) {
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('username', storedUser.username);
+      const accountKey = (storedUser.email || storedUser.username || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+      if (accountKey) localStorage.setItem(LOGGED_IN_USER_KEY, accountKey)
       alert("Login successful");
       if (typeof onLoginSuccess === 'function') {
-        onLoginSuccess(storedUser.username);
+        onLoginSuccess(storedUser);
       }
     } else {
       alert("Invalid credentials");

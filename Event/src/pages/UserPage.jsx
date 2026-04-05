@@ -1,55 +1,80 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getBookings, getUsers } from '../utils/storage'
+import { getBookingsForUser, getUsers, LOGGED_IN_USER_KEY } from '../utils/storage'
 import './DashboardPage.css'
 
 const userTags = ['My Tickets', 'Wishlist', 'Recommendations', 'Offers', 'Settings']
+
+function sanitizeStoredUsername(value) {
+  if (typeof value !== 'string') return ''
+  const t = value.trim()
+  if (!t || t === '[object Object]') return ''
+  return t
+}
 
 export default function UserPage({ currentUsername }) {
   const [currentUser, setCurrentUser] = useState(null)
   const [bookings, setBookings] = useState([])
 
   useEffect(() => {
-    const storedUsername = currentUsername || localStorage.getItem('username') || ''
-    if (!storedUsername) {
+    const fromProp = sanitizeStoredUsername(
+      typeof currentUsername === 'string' ? currentUsername : '',
+    )
+    const fromStorage = sanitizeStoredUsername(localStorage.getItem('username') || '')
+    const storedUsername = fromProp || fromStorage
+    const accountKey = (localStorage.getItem(LOGGED_IN_USER_KEY) || '')
+      .toString()
+      .trim()
+      .toLowerCase()
+
+    if (!storedUsername && !accountKey) {
       setCurrentUser(null)
       setBookings([])
       return
     }
 
     const users = getUsers()
-    const matchedUser = users.find(
-      (user) => user.username === storedUsername || user.email === storedUsername,
-    )
+    const lower = (s) => (s || '').toString().trim().toLowerCase()
 
-    const user = matchedUser || {
-      username: storedUsername || 'guest',
-      name: storedUsername || 'Guest User',
-      email: '',
-      phone: '',
-      role: 'Customer',
-      id: Date.now(),
-    }
-
-    const allBookings = getBookings()
-    const userName = (user.name || user.username || '').toLowerCase()
-    const userEmail = (user.email || '').toLowerCase()
-    const loginUsername = storedUsername.toLowerCase()
-
-    const filteredBookings = allBookings.filter((booking) => {
-      const bookingUsername = (booking.username || '').toLowerCase()
-      const bookingName = (booking.userName || booking.buyerName || '').toLowerCase()
-      const bookingEmail = (booking.buyerEmail || '').toLowerCase()
-
-      if (bookingUsername) {
-        return bookingUsername === loginUsername
-      }
-
-      return bookingName === userName || bookingEmail === userEmail
+    const matchedUser = users.find((user) => {
+      const uName = user.username
+      const uEmail = user.email
+      return (
+        (storedUsername && (uName === storedUsername || uEmail === storedUsername)) ||
+        (accountKey &&
+          (lower(uEmail) === accountKey || lower(uName) === accountKey))
+      )
     })
 
+    const displayName =
+      matchedUser?.name ||
+      [matchedUser?.firstName, matchedUser?.lastName].filter(Boolean).join(' ').trim() ||
+      matchedUser?.username ||
+      storedUsername ||
+      'Guest User'
+
+    const user = matchedUser
+      ? {
+          ...matchedUser,
+          name: displayName || matchedUser.username,
+        }
+      : {
+          username: storedUsername || accountKey || 'guest',
+          name: displayName,
+          email: '',
+          phone: '',
+          role: 'Customer',
+          id: Date.now(),
+        }
+
+    const bookingsKey =
+      accountKey ||
+      lower(user.email) ||
+      lower(user.username) ||
+      lower(storedUsername)
+
     setCurrentUser(user)
-    setBookings(filteredBookings)
+    setBookings(getBookingsForUser(bookingsKey))
   }, [currentUsername])
 
   const sortedBookings = useMemo(
@@ -98,6 +123,10 @@ export default function UserPage({ currentUsername }) {
             </div>
 
             <div className="profile-details">
+              <div className="profile-field">
+                <span>Username</span>
+                <strong>{currentUser?.username || '—'}</strong>
+              </div>
               <div className="profile-field">
                 <span>Email</span>
                 <strong>{currentUser?.email || 'No email added'}</strong>

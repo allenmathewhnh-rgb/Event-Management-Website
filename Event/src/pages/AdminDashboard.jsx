@@ -4,7 +4,17 @@ import StatsCards from '../components/StatsCards'
 import EventsTable from '../components/EventsTable'
 import BookingsTable from '../components/BookingsTable'
 import UsersTable from '../components/UsersTable'
-import { getEvents, saveBookings, saveEvents, getBookings, getUsers, saveUsers } from '../utils/storage'
+import {
+  getEvents,
+  saveEvents,
+  getAllBookingsFlat,
+  saveBookingsMap,
+  patchBookingById,
+  getUsers,
+  saveUsers,
+  normalizeStoredEventImageUrl,
+  FALLBACK_EVENT_IMAGE,
+} from '../utils/storage'
 
 const initialEvents = [
   {
@@ -82,8 +92,10 @@ export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [events, setEvents] = useState(() => getEvents())
   const [bookings, setBookings] = useState(() => {
-    const stored = getBookings()
-    return stored.length ? stored : initialBookings
+    const stored = getAllBookingsFlat()
+    if (stored.length) return stored
+    seedBookingsIfEmpty()
+    return getAllBookingsFlat()
   })
   const [users, setUsers] = useState(() => {
     const stored = getUsers()
@@ -178,11 +190,10 @@ export default function AdminDashboard() {
   }
 
   const handleUpdateBookingStatus = (id, status) => {
-    setBookings((current) => {
-      const updated = current.map((booking) => (booking.id === id ? { ...booking, status } : booking))
-      saveBookings(updated)
-      return updated
-    })
+    patchBookingById(id, { status })
+    setBookings((current) =>
+      current.map((booking) => (booking.id === id ? { ...booking, status } : booking)),
+    )
   }
 
   const handleDeleteUser = (id) => {
@@ -312,10 +323,17 @@ export default function AdminDashboard() {
               />
               <input
                 style={styles.input}
-                placeholder="Image URL"
+                type="text"
+                inputMode="url"
+                autoComplete="off"
+                placeholder="https://… or /image-in-public-folder.jpg"
                 value={form.image}
                 onChange={(e) => handleFormChange('image', e.target.value)}
+                title="HTTPS URL, protocol-relative URL, or site-relative path from /public"
               />
+              <p style={styles.fieldHint}>
+                Paste a direct image address (https://…), a protocol-relative CDN link (//…), or a path served from your app’s public folder (e.g. /events/banner.jpg). Spaces are trimmed when you save.
+              </p>
               <button type="submit" style={styles.submitButton}>
                 {editingId ? 'Save Changes' : 'Add Event'}
               </button>
@@ -442,6 +460,12 @@ const styles = {
     border: '1px solid #d7dbe5',
     fontSize: 15,
     color: '#1a2240',
+  },
+  fieldHint: {
+    margin: '-4px 0 0',
+    fontSize: 13,
+    color: '#66708b',
+    lineHeight: 1.45,
   },
   submitButton: {
     width: 180,

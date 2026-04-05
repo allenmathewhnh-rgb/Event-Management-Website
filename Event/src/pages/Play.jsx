@@ -1,31 +1,61 @@
 import { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
-import Modal from '../components/Modal'
-import { getBookings, saveBookings } from '../utils/storage'
+import {
+  getBookingsForUser,
+  saveBookingsForUser,
+  LOGGED_IN_USER_KEY,
+} from '../utils/storage'
 
-export default function Play() {
-  const [selectedBooking, setSelectedBooking] = useState(null)
-  const [qrDataUrl, setQrDataUrl] = useState('')
-  const [bookings, setBookings] = useState(() => getBookings())
-  const [statusMessage, setStatusMessage] = useState('')
+function currentAccountKey() {
+  return (localStorage.getItem(LOGGED_IN_USER_KEY) || '').trim()
+}
+
+
+function TicketQr({ ticketId }) {
+  const [dataUrl, setDataUrl] = useState('')
 
   useEffect(() => {
-    if (!selectedBooking) {
-      setQrDataUrl('')
+    if (!ticketId) {
+      setDataUrl('')
       return
     }
-
-    QRCode.toDataURL(selectedBooking.ticketId, {
+    let cancelled = false
+    QRCode.toDataURL(ticketId, {
       margin: 1,
-      width: 180,
+      width: 132,
       color: {
-        dark: '#1e293b',
+        dark: '#3d4f63',
         light: '#ffffff',
       },
     })
-      .then(setQrDataUrl)
-      .catch(() => setQrDataUrl(''))
-  }, [selectedBooking])
+      .then((url) => {
+        if (!cancelled) setDataUrl(url)
+      })
+      .catch(() => {
+        if (!cancelled) setDataUrl('')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [ticketId])
+
+  if (!dataUrl) {
+    return <div style={styles.qrPlaceholder}>Generating code…</div>
+  }
+  return (
+    <img
+      src={dataUrl}
+      alt={`QR code for booking ${ticketId}`}
+      style={styles.qrOnTicket}
+    />
+  )
+}
+
+export default function Play() {
+  const [bookings, setBookings] = useState(() =>
+    getBookingsForUser(currentAccountKey()),
+  )
+  const [statusMessage, setStatusMessage] = useState('')
 
   const cancelBooking = (bookingId) => {
     const updated = bookings.map((booking) =>
@@ -33,11 +63,8 @@ export default function Play() {
         ? { ...booking, status: 'Cancelled' }
         : booking,
     )
-    saveBookings(updated)
+    saveBookingsForUser(currentAccountKey(), updated)
     setBookings(updated)
-    if (selectedBooking?.id === bookingId) {
-      setSelectedBooking(updated.find((booking) => booking.id === bookingId))
-    }
     setStatusMessage('Booking status updated to Cancelled.')
   }
 
@@ -45,46 +72,54 @@ export default function Play() {
     try {
       const qrData = await QRCode.toDataURL(booking.ticketId, {
         margin: 1,
-        width: 180,
+        width: 200,
+        color: { dark: '#3d4f63', light: '#ffffff' },
       })
       const qrImage = new Image()
       qrImage.src = qrData
       await qrImage.decode()
 
-      const width = 860
-      const height = 520
+      const width = 880
+      const height = 540
       const canvas = document.createElement('canvas')
       canvas.width = width
       canvas.height = height
       const ctx = canvas.getContext('2d')
 
-      ctx.fillStyle = '#eef2ff'
+      ctx.fillStyle = '#f0f4fa'
       ctx.fillRect(0, 0, width, height)
-      ctx.fillStyle = '#0f172a'
-      ctx.fillRect(0, 0, width, 120)
+      ctx.fillStyle = '#4a6fa5'
+      ctx.fillRect(0, 0, width, 112)
 
-      ctx.fillStyle = '#fff'
-      ctx.font = '700 28px sans-serif'
-      ctx.fillText('Event Ticket', 32, 48)
-      ctx.font = '500 14px sans-serif'
-      ctx.fillText(`Booking ID: ${booking.ticketId}`, 32, 78)
-
-      ctx.fillStyle = '#0f172a'
-      ctx.font = '700 34px sans-serif'
-      ctx.fillText(booking.eventName, 32, 160)
-      ctx.font = '600 16px sans-serif'
-      ctx.fillText(`${booking.date} · ${booking.time}`, 32, 200)
-      ctx.fillText(`Venue: ${booking.venue}`, 32, 234)
-      ctx.fillText(`Name: ${booking.buyerName}`, 32, 270)
-      ctx.fillText(`Email: ${booking.buyerEmail}`, 32, 302)
-      ctx.fillText(`Tickets: ${booking.tickets}   Total: ₹${booking.total}`, 32, 338)
-      ctx.fillStyle = booking.status === 'Cancelled' ? '#ef4444' : '#16a34a'
-      ctx.fillText(`Status: ${booking.status}`, 32, 374)
-
-      ctx.drawImage(qrImage, width - 220, 32, 180, 180)
-      ctx.fillStyle = '#475569'
+      ctx.fillStyle = '#f8fafc'
+      ctx.font = '700 26px sans-serif'
+      ctx.fillText('Digital ticket', 36, 52)
       ctx.font = '500 13px sans-serif'
-      ctx.fillText('Scan for booking reference', width - 220, 236)
+      ctx.fillStyle = 'rgba(248, 250, 252, 0.92)'
+      ctx.fillText(`Reference: ${booking.ticketId}`, 36, 82)
+
+      ctx.fillStyle = '#2c3e50'
+      ctx.font = '700 30px sans-serif'
+      ctx.fillText(booking.eventName, 36, 168)
+      ctx.font = '500 15px sans-serif'
+      ctx.fillStyle = '#5a6d7e'
+      ctx.fillText(`${booking.date} · ${booking.time || 'TBA'}`, 36, 204)
+      ctx.fillText(`Venue: ${booking.venue || '—'}`, 36, 232)
+      ctx.fillText(`Guest: ${booking.buyerName || '—'}`, 36, 268)
+      ctx.fillText(`Email: ${booking.buyerEmail || '—'}`, 36, 296)
+      ctx.fillText(
+        `Tickets: ${booking.tickets}    Total: ₹${booking.total ?? 0}`,
+        36,
+        332,
+      )
+      ctx.fillStyle = booking.status === 'Cancelled' ? '#c45c5c' : '#3d8b6e'
+      ctx.font = '600 14px sans-serif'
+      ctx.fillText(`Status: ${booking.status}`, 36, 372)
+
+      ctx.drawImage(qrImage, width - 236, 36, 200, 200)
+      ctx.fillStyle = '#6b7c8c'
+      ctx.font = '500 12px sans-serif'
+      ctx.fillText('Scan for check-in', width - 236, 252)
 
       const link = document.createElement('a')
       link.href = canvas.toDataURL('image/png')
@@ -104,74 +139,101 @@ export default function Play() {
     <div style={styles.page}>
       <div style={styles.header}>
         <h1 style={styles.title}>My Bookings</h1>
-        <p style={styles.subtitle}>Review your confirmed reservations with QR access and ticket downloads.</p>
+        <p style={styles.subtitle}>
+          Each ticket shows a QR code for venue check-in. Download a copy if you need it offline.
+        </p>
         {statusMessage && <div style={styles.statusMessage}>{statusMessage}</div>}
       </div>
 
       {sortedBookings.length === 0 ? (
         <div style={styles.emptyState}>
-          <h2>No Bookings Yet</h2>
-          <p>Once you complete a booking, it will appear here.</p>
+          <h2 style={styles.emptyTitle}>No bookings yet</h2>
+          <p style={styles.emptyText}>
+            Once you complete a booking, your ticket will show up here with a QR code.
+          </p>
         </div>
       ) : (
         <div style={styles.grid}>
           {sortedBookings.map((booking) => (
-            <article key={booking.id} style={styles.card}>
-              <div style={styles.cardTop}>
-                <div>
-                  <h3 style={styles.cardTitle}>{booking.eventName}</h3>
-                  <p style={styles.cardMeta}>Booking ID: {booking.ticketId}</p>
+            <article key={booking.id} style={styles.ticket}>
+              <div style={styles.ticketAccent} aria-hidden />
+              <div style={styles.ticketBody}>
+                <div style={styles.ticketMain}>
+                  <div style={styles.ticketHeaderRow}>
+                    <span style={styles.ticketEyebrow}>Admission</span>
+                    <span
+                      style={{
+                        ...styles.badge,
+                        background:
+                          booking.status === 'Confirmed'
+                            ? 'rgba(61, 139, 110, 0.18)'
+                            : 'rgba(196, 92, 92, 0.16)',
+                        color:
+                          booking.status === 'Confirmed' ? '#2d6b52' : '#a34444',
+                      }}
+                    >
+                      {booking.status}
+                    </span>
+                  </div>
+                  <h3 style={styles.eventTitle}>{booking.eventName}</h3>
+                  <p style={styles.refLine}>Ref. {booking.ticketId}</p>
+
+                  <dl style={styles.detailList}>
+                    <div style={styles.detailRow}>
+                      <dt style={styles.detailLabel}>Date</dt>
+                      <dd style={styles.detailValue}>{booking.date}</dd>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <dt style={styles.detailLabel}>Time</dt>
+                      <dd style={styles.detailValue}>{booking.time || 'TBA'}</dd>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <dt style={styles.detailLabel}>Venue</dt>
+                      <dd style={styles.detailValue}>{booking.venue || '—'}</dd>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <dt style={styles.detailLabel}>Guest</dt>
+                      <dd style={styles.detailValue}>{booking.buyerName || '—'}</dd>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <dt style={styles.detailLabel}>Email</dt>
+                      <dd style={styles.detailValue}>{booking.buyerEmail || '—'}</dd>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <dt style={styles.detailLabel}>Tickets</dt>
+                      <dd style={styles.detailValue}>{booking.tickets}</dd>
+                    </div>
+                  </dl>
+
+                  <div style={styles.totalBar}>
+                    <span style={styles.totalLabel}>Total paid</span>
+                    <span style={styles.totalAmount}>₹{booking.total ?? 0}</span>
+                  </div>
                 </div>
-                <span style={{
-                  ...styles.badge,
-                  background: booking.status === 'Confirmed' ? '#16a34a' : '#f97316',
-                }}>
-                  {booking.status}
-                </span>
+
+                <aside style={styles.qrColumn}>
+                  <TicketQr ticketId={booking.ticketId} />
+                  <p style={styles.qrHint}>Show this code at the entrance.</p>
+                </aside>
               </div>
 
-              <div style={styles.infoGrid}>
-                <div style={styles.infoItem}>
-                  <span style={styles.icon}>🗓️</span>
-                  <span>{booking.date}</span>
-                </div>
-                <div style={styles.infoItem}>
-                  <span style={styles.icon}>⏰</span>
-                  <span>{booking.time}</span>
-                </div>
-                <div style={styles.infoItem}>
-                  <span style={styles.icon}>📍</span>
-                  <span>{booking.venue}</span>
-                </div>
-                <div style={styles.infoItem}>
-                  <span style={styles.icon}>👤</span>
-                  <span>{booking.buyerName}</span>
-                </div>
-                <div style={styles.infoItem}>
-                  <span style={styles.icon}>✉️</span>
-                  <span>{booking.buyerEmail}</span>
-                </div>
-                <div style={styles.infoItem}>
-                  <span style={styles.icon}>🎫</span>
-                  <span>{booking.tickets} ticket(s)</span>
-                </div>
-              </div>
-
-              <div style={styles.summaryRow}>
-                <span style={styles.summaryLabel}>Total paid</span>
-                <strong style={styles.summaryValue}>₹{booking.total}</strong>
-              </div>
+              <div style={styles.ticketDivider} aria-hidden />
 
               <div style={styles.actionsRow}>
-                <button style={styles.buttonPrimary} onClick={() => setSelectedBooking(booking)}>
-                  View QR
-                </button>
-                <button style={styles.buttonSecondary} onClick={() => downloadTicket(booking)}>
-                  Download Ticket
+                <button
+                  type="button"
+                  style={styles.buttonSecondary}
+                  onClick={() => downloadTicket(booking)}
+                >
+                  Download ticket
                 </button>
                 {booking.status !== 'Cancelled' && (
-                  <button style={styles.buttonDanger} onClick={() => cancelBooking(booking.id)}>
-                    Cancel Booking
+                  <button
+                    type="button"
+                    style={styles.buttonDanger}
+                    onClick={() => cancelBooking(booking.id)}
+                  >
+                    Cancel booking
                   </button>
                 )}
               </div>
@@ -179,56 +241,6 @@ export default function Play() {
           ))}
         </div>
       )}
-
-      <Modal isOpen={Boolean(selectedBooking)} onClose={() => setSelectedBooking(null)}>
-        {selectedBooking && (
-          <div style={styles.modalBody}>
-            <div style={styles.modalHeader}>
-              <div>
-                <h2 style={styles.modalTitle}>{selectedBooking.eventName}</h2>
-                <p style={styles.cardMeta}>{selectedBooking.date} · {selectedBooking.time}</p>
-                <p style={styles.cardMeta}>{selectedBooking.venue}</p>
-              </div>
-              <span style={{
-                ...styles.badge,
-                background: selectedBooking.status === 'Confirmed' ? '#16a34a' : '#f97316',
-              }}>
-                {selectedBooking.status}
-              </span>
-            </div>
-
-            <div style={styles.modalGrid}>
-              <div style={styles.modalSection}>
-                <div style={styles.infoItem}><span style={styles.icon}>👤</span><span>{selectedBooking.buyerName}</span></div>
-                <div style={styles.infoItem}><span style={styles.icon}>✉️</span><span>{selectedBooking.buyerEmail}</span></div>
-                <div style={styles.infoItem}><span style={styles.icon}>🎫</span><span>{selectedBooking.tickets} ticket(s)</span></div>
-                <div style={styles.infoItem}><span style={styles.icon}>💰</span><span>Total: ₹{selectedBooking.total}</span></div>
-                <div style={styles.infoItem}><span style={styles.icon}>🆔</span><span>{selectedBooking.ticketId}</span></div>
-                <div style={styles.infoItem}><span style={styles.icon}>📅</span><span>Booked on {new Date(selectedBooking.bookedAt).toLocaleString()}</span></div>
-              </div>
-              <div style={styles.qrPanel}>
-                {qrDataUrl ? (
-                  <img src={qrDataUrl} alt="Booking QR Code" style={styles.qrImage} />
-                ) : (
-                  <div style={styles.qrFallback}>QR code loading…</div>
-                )}
-                <p style={styles.qrCaption}>Scan this QR at the venue entrance.</p>
-              </div>
-            </div>
-
-            <div style={styles.actionsRow}>
-              <button style={styles.buttonPrimary} onClick={() => downloadTicket(selectedBooking)}>
-                Download Ticket
-              </button>
-              {selectedBooking.status !== 'Cancelled' && (
-                <button style={styles.buttonDanger} onClick={() => cancelBooking(selectedBooking.id)}>
-                  Cancel Booking
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   )
 }
@@ -237,209 +249,238 @@ const styles = {
   page: {
     minHeight: '100vh',
     padding: 24,
-    background: '#eef1fb',
+    background: 'linear-gradient(165deg, #e8edf5 0%, #eef1fb 45%, #e5eaf4 100%)',
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 28,
     display: 'grid',
     gap: 10,
+    maxWidth: 720,
   },
   title: {
     margin: 0,
     fontSize: 32,
-    color: '#1a2240',
+    fontWeight: 700,
+    color: '#2a3f5c',
+    letterSpacing: '-0.02em',
   },
   subtitle: {
     margin: 0,
-    color: '#66708b',
+    color: '#6b7c8c',
     fontSize: 16,
+    lineHeight: 1.5,
   },
   statusMessage: {
     padding: '14px 18px',
-    borderRadius: 18,
-    background: '#e0f2fe',
-    color: '#0f172a',
-    border: '1px solid #bae6fd',
+    borderRadius: 14,
+    background: 'rgba(74, 111, 165, 0.12)',
+    color: '#3d5580',
+    border: '1px solid rgba(74, 111, 165, 0.22)',
+    fontSize: 14,
   },
   emptyState: {
-    padding: 28,
+    padding: 40,
     borderRadius: 24,
     background: '#fff',
-    border: '1px solid #d6d9e6',
+    border: '1px solid rgba(100, 116, 139, 0.15)',
     textAlign: 'center',
+    maxWidth: 480,
+    margin: '0 auto',
+  },
+  emptyTitle: {
+    margin: '0 0 10px',
+    fontSize: 22,
+    fontWeight: 600,
+    color: '#3d4f63',
+  },
+  emptyText: {
+    margin: 0,
+    color: '#6b7c8c',
+    fontSize: 15,
+    lineHeight: 1.55,
   },
   grid: {
     display: 'grid',
-    gap: 20,
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: 24,
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 380px), 1fr))',
   },
-  card: {
-    padding: 28,
-    borderRadius: 30,
-    background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
-    boxShadow: '0 24px 60px rgba(15, 23, 42, 0.1)',
-    border: '1px solid rgba(148, 163, 184, 0.2)',
+  ticket: {
+    borderRadius: 20,
+    background: '#fff',
+    boxShadow: '0 20px 50px rgba(42, 63, 92, 0.08)',
+    border: '1px solid rgba(100, 116, 139, 0.12)',
+    overflow: 'hidden',
     display: 'grid',
-    gap: 20,
   },
-  cardTop: {
+  ticketAccent: {
+    height: 6,
+    background: 'linear-gradient(90deg, #5c7cba, #7b9fd4, #5c7cba)',
+    opacity: 0.95,
+  },
+  ticketBody: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 20,
+    padding: '22px 22px 18px',
+    alignItems: 'flex-start',
+  },
+  ticketMain: {
+    flex: '1 1 220px',
+    minWidth: 0,
+    display: 'grid',
+    gap: 14,
+  },
+  ticketHeaderRow: {
     display: 'flex',
     justifyContent: 'space-between',
-    gap: 16,
-    flexWrap: 'wrap',
-    alignItems: 'start',
-  },
-  cardTitle: {
-    margin: '0 0 6px',
-    fontSize: 24,
-    color: '#0f172a',
-  },
-  cardMeta: {
-    margin: 0,
-    color: '#64748b',
-    fontSize: 14,
-  },
-  cardText: {
-    margin: '10px 0 0',
-    color: '#334155',
-  },
-  badge: {
-    padding: '10px 18px',
-    borderRadius: 999,
-    color: '#fff',
-    fontWeight: 700,
-    fontSize: 12,
-    letterSpacing: '0.02em',
-    textTransform: 'uppercase',
-  },
-  infoGrid: {
-    display: 'grid',
-    gap: 12,
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-  },
-  infoItem: {
-    display: 'flex',
     alignItems: 'center',
     gap: 12,
-    padding: '12px 16px',
-    borderRadius: 18,
-    background: '#f8fafc',
-    color: '#334155',
+    flexWrap: 'wrap',
+  },
+  ticketEyebrow: {
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: '#7d8ea3',
+  },
+  eventTitle: {
+    margin: 0,
+    fontSize: 21,
+    fontWeight: 700,
+    color: '#34495e',
+    lineHeight: 1.3,
+  },
+  refLine: {
+    margin: 0,
+    fontSize: 13,
+    color: '#7d8ea3',
+    fontFamily: 'ui-monospace, monospace',
+  },
+  detailList: {
+    margin: 0,
+    display: 'grid',
+    gap: 8,
+  },
+  detailRow: {
+    display: 'grid',
+    gridTemplateColumns: '88px 1fr',
+    gap: 10,
+    alignItems: 'baseline',
     fontSize: 14,
   },
-  icon: {
-    width: 34,
-    height: 34,
+  detailLabel: {
+    margin: 0,
+    color: '#8b9bab',
+    fontWeight: 600,
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+  },
+  detailValue: {
+    margin: 0,
+    color: '#4a5f73',
+    lineHeight: 1.4,
+    wordBreak: 'break-word',
+  },
+  totalBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '12px 14px',
+    borderRadius: 12,
+    background: 'linear-gradient(135deg, rgba(92, 124, 186, 0.1), rgba(123, 159, 212, 0.08))',
+    border: '1px solid rgba(92, 124, 186, 0.15)',
+  },
+  totalLabel: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: '#6b7c8c',
+  },
+  totalAmount: {
+    fontSize: 19,
+    fontWeight: 700,
+    color: '#3d5580',
+  },
+  qrColumn: {
+    display: 'grid',
+    justifyItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 14,
+    background: 'linear-gradient(180deg, #f6f8fc 0%, #eef2f8 100%)',
+    border: '1px dashed rgba(100, 116, 139, 0.28)',
+    minWidth: 156,
+    flex: '0 0 auto',
+    marginLeft: 'auto',
+  },
+  qrOnTicket: {
+    width: 132,
+    height: 132,
+    display: 'block',
+    borderRadius: 10,
+    background: '#fff',
+    padding: 8,
+    boxSizing: 'content-box',
+    boxShadow: '0 8px 24px rgba(42, 63, 92, 0.06)',
+  },
+  qrPlaceholder: {
+    width: 132,
+    height: 132,
     display: 'grid',
     placeItems: 'center',
-    borderRadius: 12,
-    background: '#e2e8f0',
-    fontSize: 16,
+    borderRadius: 10,
+    background: '#e8edf4',
+    color: '#7d8ea3',
+    fontSize: 12,
+    textAlign: 'center',
+    padding: 8,
+    boxSizing: 'border-box',
   },
-  summaryRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '18px 20px',
-    background: '#eef2ff',
-    borderRadius: 18,
+  qrHint: {
+    margin: 0,
+    fontSize: 11,
+    color: '#7d8ea3',
+    textAlign: 'center',
+    lineHeight: 1.35,
+    maxWidth: 140,
   },
-  summaryLabel: {
-    color: '#475569',
+  ticketDivider: {
+    margin: '0 22px',
+    borderTop: '1px dashed rgba(100, 116, 139, 0.28)',
   },
-  summaryValue: {
-    fontSize: 20,
-    color: '#0f172a',
+  badge: {
+    padding: '6px 12px',
+    borderRadius: 999,
+    fontWeight: 700,
+    fontSize: 11,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
   },
   actionsRow: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: 12,
-  },
-  buttonPrimary: {
-    padding: '12px 18px',
-    borderRadius: 18,
-    border: 'none',
-    background: 'linear-gradient(135deg, #4f46e5, #2563eb)',
-    color: '#fff',
-    cursor: 'pointer',
-    fontWeight: 700,
+    gap: 10,
+    padding: '16px 22px 22px',
   },
   buttonSecondary: {
-    padding: '12px 18px',
-    borderRadius: 18,
-    border: '1px solid rgba(79, 70, 229, 0.18)',
+    padding: '11px 18px',
+    borderRadius: 12,
+    border: '1px solid rgba(92, 124, 186, 0.35)',
     background: '#fff',
-    color: '#334155',
+    color: '#4a6fa5',
     cursor: 'pointer',
-    fontWeight: 700,
+    fontWeight: 600,
+    fontSize: 14,
   },
   buttonDanger: {
-    padding: '12px 18px',
-    borderRadius: 18,
+    padding: '11px 18px',
+    borderRadius: 12,
     border: 'none',
-    background: '#ef4444',
-    color: '#fff',
+    background: 'rgba(196, 92, 92, 0.14)',
+    color: '#a34444',
     cursor: 'pointer',
-    fontWeight: 700,
-  },
-  modalBody: {
-    display: 'grid',
-    gap: 24,
-    minWidth: 320,
-    maxWidth: 780,
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 18,
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
-  },
-  modalTitle: {
-    margin: 0,
-    fontSize: 28,
-    color: '#0f172a',
-  },
-  modalGrid: {
-    display: 'grid',
-    gap: 24,
-    gridTemplateColumns: '1fr 280px',
-  },
-  modalSection: {
-    display: 'grid',
-    gap: 12,
-  },
-  qrPanel: {
-    padding: 22,
-    borderRadius: 24,
-    background: '#f8fafc',
-    display: 'grid',
-    alignItems: 'center',
-    justifyItems: 'center',
-    gap: 14,
-  },
-  qrImage: {
-    width: 180,
-    height: 180,
-    borderRadius: 22,
-    background: '#fff',
-    padding: 10,
-    boxShadow: '0 22px 50px rgba(15, 23, 42, 0.08)',
-  },
-  qrFallback: {
-    width: 180,
-    height: 180,
-    borderRadius: 22,
-    display: 'grid',
-    placeItems: 'center',
-    background: '#e2e8f0',
-    color: '#475569',
-  },
-  qrCaption: {
-    margin: 0,
-    textAlign: 'center',
-    color: '#64748b',
+    fontWeight: 600,
     fontSize: 14,
   },
 }

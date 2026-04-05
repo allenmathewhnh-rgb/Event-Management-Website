@@ -17,8 +17,8 @@ const Register = ({ onSwitchToLogin, onClose }) => {
       alert('Please fill in username, email, phone, and password.')
       return
     }
-    if (password.length < 8) {
-      alert('Password must be at least 8 characters long.')
+    if (password.length < 4) {
+      alert('Password must be at least 4 characters long.')
       return
     }
     if (password !== confirmPassword) {

@@ -16,6 +16,7 @@ import UserPage from './pages/UserPage'
 import Footer from './components/Footer'
 import Login from './components/Login'
 import Register from './components/Register'
+import { getUsers, LOGGED_IN_USER_KEY } from './utils/storage'
 
 function Home() {
   return (
@@ -36,9 +37,40 @@ function App() {
 
   useEffect(() => {
     const storedStatus = localStorage.getItem('isLoggedIn') === 'true'
-    const storedUsername = localStorage.getItem('username') || ''
+    const rawUsername = localStorage.getItem('username') || ''
+    const storedUsername =
+      rawUsername.trim() && rawUsername.trim() !== '[object Object]'
+        ? rawUsername.trim()
+        : ''
+
+    let storedAccount = (localStorage.getItem(LOGGED_IN_USER_KEY) || '').trim().toLowerCase()
+    const users = getUsers()
+
+    let effectiveUsername = storedUsername
+    if (storedStatus && !effectiveUsername && storedAccount) {
+      const matched = users.find(
+        (u) =>
+          (u.email || '').toString().trim().toLowerCase() === storedAccount ||
+          (u.username || '').toString().trim().toLowerCase() === storedAccount,
+      )
+      if (matched?.username) {
+        effectiveUsername = matched.username
+        localStorage.setItem('username', effectiveUsername)
+      }
+    }
+
     setIsLoggedIn(storedStatus)
-    setUsername(storedUsername)
+    setUsername(effectiveUsername)
+
+    if (storedStatus && !storedAccount && effectiveUsername) {
+      const matched = users.find(
+        (u) => u.username === effectiveUsername || u.email === effectiveUsername,
+      )
+      if (matched) {
+        storedAccount = (matched.email || matched.username || '').trim().toLowerCase()
+        if (storedAccount) localStorage.setItem(LOGGED_IN_USER_KEY, storedAccount)
+      }
+    }
   }, [])
 
   const openLogin = (path) => {
@@ -48,11 +80,18 @@ function App() {
   }
   const openRegister = () => { setShowLogin(false); setShowRegister(true) }
   const closeAll = () => { setShowLogin(false); setShowRegister(false); setRedirectPath(null) }
-  const handleLoginSuccess = (username) => {
+  const handleLoginSuccess = (user) => {
+    const u = typeof user === 'string' ? { username: user } : user || {}
+    const nextUsername = (u.username || '').toString().trim()
+    const accountKey = (u.email || u.username || '')
+      .toString()
+      .trim()
+      .toLowerCase()
     setIsLoggedIn(true)
-    setUsername(username)
+    setUsername(nextUsername)
     localStorage.setItem('isLoggedIn', 'true')
-    if (username) localStorage.setItem('username', username)
+    if (nextUsername) localStorage.setItem('username', nextUsername)
+    if (accountKey) localStorage.setItem(LOGGED_IN_USER_KEY, accountKey)
     setShowLogin(false)
     setShowRegister(false)
     if (redirectPath) {
@@ -66,6 +105,7 @@ function App() {
     setUsername('')
     localStorage.removeItem('isLoggedIn')
     localStorage.removeItem('username')
+    localStorage.removeItem(LOGGED_IN_USER_KEY)
     localStorage.removeItem('ems_selected_event')
     navigate('/')
   }

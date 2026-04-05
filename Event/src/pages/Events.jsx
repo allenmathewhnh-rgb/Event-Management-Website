@@ -1,16 +1,31 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import EventCard from '../components/EventCard'
 import EventModal from '../components/EventModal'
-import { getEvents } from '../utils/storage'
+import { EVENTS_STORAGE_KEY, getEvents } from '../utils/storage'
 
 export default function Events({ isAuthenticated, onRequireLogin }) {
+  const location = useLocation()
   const [events, setEvents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    setEvents(getEvents())
-  }, [])
+    const loadEvents = () => setEvents(getEvents())
+    loadEvents()
+
+    const onStorage = (e) => {
+      if (e.key === EVENTS_STORAGE_KEY) loadEvents()
+    }
+    const onEventsChanged = () => loadEvents()
+
+    window.addEventListener('storage', onStorage)
+    window.addEventListener('ems-events-changed', onEventsChanged)
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('ems-events-changed', onEventsChanged)
+    }
+  }, [location.pathname])
 
   const handleOpen = (event) => {
     setSelectedEvent(event)

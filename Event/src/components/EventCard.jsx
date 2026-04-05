@@ -1,7 +1,23 @@
+import { useEffect, useState } from 'react'
+import { FALLBACK_EVENT_IMAGE, resolveEventImageSrc } from '../utils/storage'
+
 export default function EventCard({ event, onSelect }) {
+  const [imgSrc, setImgSrc] = useState(() => resolveEventImageSrc(event))
+
+  useEffect(() => {
+    setImgSrc(resolveEventImageSrc(event))
+  }, [event?.id, event?.image, event?.imageUrl])
+
   return (
     <article style={styles.card} onClick={() => onSelect?.(event)}>
-      <img src={event.image} alt={event.name} style={styles.image} />
+      <img
+        src={imgSrc}
+        alt={event.name}
+        style={styles.image}
+        loading="lazy"
+        decoding="async"
+        onError={() => setImgSrc(FALLBACK_EVENT_IMAGE)}
+      />
       <div style={styles.body}>
         <div>
           <h3 style={styles.title}>{event.name}</h3>
@@ -30,6 +46,7 @@ const styles = {
     width: '100%',
     height: 180,
     objectFit: 'cover',
+    background: '#e8ecf4',
   },
   body: {
     padding: 18,
