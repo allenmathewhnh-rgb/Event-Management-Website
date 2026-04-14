@@ -1,32 +1,63 @@
 import React, { useState } from "react";
-import { getUsers, LOGGED_IN_USER_KEY } from '../utils/storage'
+import { getUsers, saveUsers } from '../utils/storage'
+import { apiUrl, API_BASE_URL } from '../utils/api'
 import "./Login.css";
 
-const Login = ({ onSwitchToRegister, onClose, onLoginSuccess }) => {
+const Login = ({ onSwitchToRegister, onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const users = getUsers()
-    const storedUser = users.find(
-      (user) => user.username === username || user.email === username,
-    )
 
-    if (storedUser && password === storedUser.password) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', storedUser.username);
-      const accountKey = (storedUser.email || storedUser.username || '')
-        .toString()
-        .trim()
-        .toLowerCase()
-      if (accountKey) localStorage.setItem(LOGGED_IN_USER_KEY, accountKey)
-      alert("Login successful");
-      if (typeof onLoginSuccess === 'function') {
-        onLoginSuccess(storedUser);
+    try {
+      const res = await fetch(apiUrl("/accounts/login/"), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password
+        })
+      });
+
+      const raw = await res.text();
+      let data = {}
+      try {
+        data = raw ? JSON.parse(raw) : {}
+      } catch {
+        data = {}
       }
-    } else {
-      alert("Invalid credentials");
+
+      if (!res.ok) {
+        alert(data.error || `Login failed (${res.status}).`)
+        return
+      }
+
+      const loggedInUser = data.user || { username: username.trim() }
+      const existingUsers = getUsers()
+      const nextUsers = [
+        ...existingUsers.filter(
+          (user) =>
+            user.username !== loggedInUser.username &&
+            (user.email || '').toLowerCase() !== (loggedInUser.email || '').toLowerCase(),
+        ),
+        {
+          ...loggedInUser,
+          name:
+            loggedInUser.name ||
+            `${loggedInUser.first_name || ''} ${loggedInUser.last_name || ''}`.trim() ||
+            loggedInUser.username,
+        },
+      ]
+      saveUsers(nextUsers)
+      onLoginSuccess?.(loggedInUser)
+      window.location.href = "/user";
+    } catch (error) {
+      console.error(error);
+      alert(`Could not connect to the Django server at ${API_BASE_URL}.`)
     }
   };
 
@@ -52,7 +83,7 @@ const Login = ({ onSwitchToRegister, onClose, onLoginSuccess }) => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <button className="login-btn">Login</button>
+        <button type="submit">Login</button>
       </form>
       <hr />
       <p className="register-link">

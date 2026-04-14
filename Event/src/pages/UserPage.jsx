@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getBookingsForUser, getUsers, LOGGED_IN_USER_KEY } from '../utils/storage'
+import { apiUrl } from '../utils/api'
 import './DashboardPage.css'
 
 const userTags = ['My Tickets', 'Wishlist', 'Recommendations', 'Offers', 'Settings']
@@ -17,64 +18,52 @@ export default function UserPage({ currentUsername }) {
   const [bookings, setBookings] = useState([])
 
   useEffect(() => {
-    const fromProp = sanitizeStoredUsername(
-      typeof currentUsername === 'string' ? currentUsername : '',
-    )
-    const fromStorage = sanitizeStoredUsername(localStorage.getItem('username') || '')
-    const storedUsername = fromProp || fromStorage
-    const accountKey = (localStorage.getItem(LOGGED_IN_USER_KEY) || '')
-      .toString()
-      .trim()
-      .toLowerCase()
+    const loadUser = async () => {
+      try {
+        const res = await fetch(apiUrl("/accounts/me/"), {
+          credentials: "include"
+        })
 
-    if (!storedUsername && !accountKey) {
-      setCurrentUser(null)
-      setBookings([])
-      return
+        if (!res.ok) {
+          window.location.href = "/"
+          return
+        }
+
+        const data = await res.json()
+        const apiUser = data.user || {}
+        const users = getUsers()
+        const storedUser = users.find(
+          (user) =>
+            user.username === apiUser.username ||
+            ((user.email || '').toLowerCase() === (apiUser.email || '').toLowerCase()),
+        )
+
+        const mergedUser = {
+          ...storedUser,
+          ...apiUser,
+          name:
+            apiUser.name ||
+            `${apiUser.first_name || ''} ${apiUser.last_name || ''}`.trim() ||
+            storedUser?.name ||
+            apiUser.username,
+          role: 'Customer',
+          memberSince: apiUser.date_joined,
+        }
+
+        const bookingKey =
+          (localStorage.getItem(LOGGED_IN_USER_KEY) || '').trim() ||
+          mergedUser.email ||
+          mergedUser.username ||
+          sanitizeStoredUsername(currentUsername)
+
+        setCurrentUser(mergedUser)
+        setBookings(getBookingsForUser(bookingKey))
+      } catch (err) {
+        console.error(err)
+      }
     }
 
-    const users = getUsers()
-    const lower = (s) => (s || '').toString().trim().toLowerCase()
-
-    const matchedUser = users.find((user) => {
-      const uName = user.username
-      const uEmail = user.email
-      return (
-        (storedUsername && (uName === storedUsername || uEmail === storedUsername)) ||
-        (accountKey &&
-          (lower(uEmail) === accountKey || lower(uName) === accountKey))
-      )
-    })
-
-    const displayName =
-      matchedUser?.name ||
-      [matchedUser?.firstName, matchedUser?.lastName].filter(Boolean).join(' ').trim() ||
-      matchedUser?.username ||
-      storedUsername ||
-      'Guest User'
-
-    const user = matchedUser
-      ? {
-          ...matchedUser,
-          name: displayName || matchedUser.username,
-        }
-      : {
-          username: storedUsername || accountKey || 'guest',
-          name: displayName,
-          email: '',
-          phone: '',
-          role: 'Customer',
-          id: Date.now(),
-        }
-
-    const bookingsKey =
-      accountKey ||
-      lower(user.email) ||
-      lower(user.username) ||
-      lower(storedUsername)
-
-    setCurrentUser(user)
-    setBookings(getBookingsForUser(bookingsKey))
+    loadUser()
   }, [currentUsername])
 
   const sortedBookings = useMemo(
@@ -102,9 +91,7 @@ export default function UserPage({ currentUsername }) {
     (sum, booking) => sum + Number(booking.total || booking.totalAmount || 0),
     0,
   )
-  const memberSince =
-    currentUser?.memberSince ||
-    (currentUser?.id ? new Date(currentUser.id).toLocaleDateString() : '—')
+  const memberSince = currentUser?.memberSince ? formatDate(currentUser.memberSince) : '—'
 
   return (
     <section className="dashboard-page user-page profile-page">
@@ -189,9 +176,9 @@ export default function UserPage({ currentUsername }) {
             <p>Number of tickets you have reserved across bookings.</p>
           </article>
           <article className="dashboard-card stat-card">
-            <h3>Total spent</h3>
-            <strong>₹{totalSpent}</strong>
-            <p>Amount spent on confirmed bookings.</p>
+            <h3>Cancelled bookings</h3>
+            <strong>{cancelledCount}</strong>
+            <p>Bookings you cancelled or that are no longer active.</p>
           </article>
         </div>
 
@@ -225,7 +212,7 @@ export default function UserPage({ currentUsername }) {
                     </div>
                     <div className="booking-row">
                       <span>Email</span>
-                      <strong>{booking.buyerEmail || 'Unknown'}</strong>
+                      <strong>{booking.buyerEmail || currentUser?.email || 'Unknown'}</strong>
                     </div>
                     <div className="booking-row">
                       <span>Tickets</span>

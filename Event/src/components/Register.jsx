@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { getUsers, saveUsers } from '../utils/storage'
+import { apiUrl } from '../utils/api'
 import "./Register.css";
 
-const Register = ({ onSwitchToLogin, onClose }) => {
+const Register = ({ onSwitchToLogin }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -11,7 +12,7 @@ const Register = ({ onSwitchToLogin, onClose }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!username.trim() || !email.trim() || !phone.trim() || !password.trim()) {
       alert('Please fill in username, email, phone, and password.')
@@ -26,29 +27,55 @@ const Register = ({ onSwitchToLogin, onClose }) => {
       return
     }
 
-    const users = getUsers()
-    const duplicate = users.find((user) => user.username === username || user.email === email)
-    if (duplicate) {
-      alert('A user with that username or email already exists.')
-      return
-    }
+    try {
+      const res = await fetch(apiUrl("/accounts/register/"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+          email: email.trim(),
+          phone: phone.trim(),
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+        })
+      });
 
-    const newUser = {
-      id: Date.now(),
-      username,
-      email,
-      firstName,
-      lastName,
-      name: `${firstName} ${lastName}`.trim() || username,
-      role: 'Customer',
-      phone,
-      blocked: false,
-      password,
-    }
+      const data = await res.json();
 
-    saveUsers([...users, newUser])
-    alert("Registration successful! Please login.");
-    onSwitchToLogin();
+      if (!res.ok) {
+        alert(data.error || "Registration failed.")
+        return
+      }
+
+      const savedUser = data.user || {
+        username: username.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        name: `${firstName} ${lastName}`.trim() || username.trim(),
+      }
+
+      const existingUsers = getUsers()
+      const nextUsers = [
+        ...existingUsers.filter(
+          (user) =>
+            user.username !== savedUser.username &&
+            (user.email || '').toLowerCase() !== (savedUser.email || '').toLowerCase(),
+        ),
+        savedUser,
+      ]
+      saveUsers(nextUsers)
+
+      alert("Registration successful! Please login.");
+      onSwitchToLogin();
+    } catch (error) {
+      console.error(error);
+      alert("Could not connect to the server.")
+    }
   };
 
   return (
